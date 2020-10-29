@@ -17,8 +17,7 @@
 #include <stdlib.h>
 #include <sched.h>
 
-#include <IntelPowerGadget/PowerGadgetLib.h>
-
+#if defined(__x86_64__)
 pthread_t thread_id;
 double CPUFrequency;
 bool stop;
@@ -26,9 +25,19 @@ double min;
 double max;
 PGSampleID sampleID_1;
 PGSampleID sampleID_2;
-
 extern bool PG_Initialize(void) __attribute__((weak_import));
+#include <IntelPowerGadget/PowerGadgetLib.h>
+#elif defined(__aarch64__)
 
+#else
+
+#endif
+
+
+
+
+
+#if defined(__x86_64__)
 static inline bool intelPowerGadgetIsAvailable() {
     return (PG_Initialize != NULL);
 }
@@ -47,8 +56,10 @@ void *listener () {
 
     pthread_exit(NULL);
 }
-
+#endif
+//
 void PG_start() {
+#if defined(__x86_64__)
     if (intelPowerGadgetIsAvailable() == false) {
         return;
     }
@@ -56,18 +67,22 @@ void PG_start() {
     stop = false;
     PG_Initialize();
     pthread_create(&thread_id, NULL, listener, NULL);
+#endif
 }
 
 void PG_stop() {
+#if defined(__x86_64__)
     if (intelPowerGadgetIsAvailable() == false) {
         return;
     }
 
     stop = true;
     PG_Shutdown();
+#endif
 }
-
+//
 double* PG_getCPUFrequency() {
+#if defined(__x86_64__)
     if (intelPowerGadgetIsAvailable() == false) {
         return NULL;
     }
@@ -78,4 +93,12 @@ double* PG_getCPUFrequency() {
         return &CPUFrequency;
     }
     return NULL;
+#else
+    return NULL;
+#endif
 }
+
+
+
+
+

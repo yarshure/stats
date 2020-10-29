@@ -40,17 +40,28 @@ internal class UsageReader: Reader<RAM_Usage> {
         var stats = vm_statistics64()
         var count = UInt32(MemoryLayout<vm_statistics64_data_t>.size / MemoryLayout<integer_t>.size)
         
-        let result: kern_return_t = withUnsafeMutablePointer(to: &stats) {
+        var result: kern_return_t = withUnsafeMutablePointer(to: &stats) {
             $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
                 host_statistics64(mach_host_self(), HOST_VM_INFO64, $0, &count)
             }
         }
         
         if result == KERN_SUCCESS {
-            let active = Double(stats.active_count) * Double(PAGE_SIZE)
-            let inactive = Double(stats.inactive_count) * Double(PAGE_SIZE)
-            let wired = Double(stats.wire_count) * Double(PAGE_SIZE)
-            let compressed = Double(stats.compressor_page_count) * Double(PAGE_SIZE)
+            var pageSize: vm_size_t = 0
+           // var result:kern_return_t
+            result = withUnsafeMutablePointer(to: &pageSize) { (size) -> kern_return_t in
+                host_page_size(mach_host_self(), size)
+            }
+            if result == KERN_SUCCESS {
+                print("pageSize :",pageSize)
+            }else {
+                print("host_page_size failed")
+            }
+            
+            let active = Double(stats.active_count) * Double(pageSize)
+            let inactive = Double(stats.inactive_count) * Double(pageSize)
+            let wired = Double(stats.wire_count) * Double(pageSize)
+            let compressed = Double(stats.compressor_page_count) * Double(pageSize)
             
             let used = active + wired + compressed
             let free = self.totalSize - used
