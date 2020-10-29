@@ -11,7 +11,7 @@
 
 import Cocoa
 import os.log
-
+import Darwin.Mach.machine.vm_types
 public enum deviceType: Int {
     case unknown = -1
     case macMini = 1
@@ -287,10 +287,12 @@ public class SystemKit {
         }
         
         if result == KERN_SUCCESS {
-            let active = Double(stats.active_count) * Double(PAGE_SIZE)
-            let inactive = Double(stats.inactive_count) * Double(PAGE_SIZE)
-            let wired = Double(stats.wire_count) * Double(PAGE_SIZE)
-            let compressed = Double(stats.compressor_page_count) * Double(PAGE_SIZE)
+           // var page_size = 16384
+            //host_page_size(host_page_size(mach_host_self(), &page_size)
+            let active = Double(stats.active_count) * Double(pageSize)
+            let inactive = Double(stats.inactive_count) * Double(pageSize)
+            let wired = Double(stats.wire_count) * Double(pageSize)
+            let compressed = Double(stats.compressor_page_count) * Double(pageSize)
             
             return ram_s(
                 active: active,
